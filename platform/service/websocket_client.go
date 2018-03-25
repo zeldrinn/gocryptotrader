@@ -1,10 +1,11 @@
-package main
+package service
 
 import (
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/websocket"
 	"github.com/thrasher-/gocryptotrader/common"
@@ -72,7 +73,8 @@ func SendWebsocketEvent(event string, reqData interface{}, result *WebsocketEven
 	return nil
 }
 
-func main() {
+// StartWebsocketClient starts a websocket client
+func StartWebsocketClient() {
 	cfg := config.GetConfig()
 	err := cfg.LoadConfig(config.ConfigFile)
 	if err != nil {
@@ -87,8 +89,7 @@ func main() {
 	var Dialer websocket.Dialer
 	WSConn, _, err = Dialer.Dial(wsHost, http.Header{})
 	if err != nil {
-		log.Println("Unable to connect to websocket server")
-		return
+		log.Fatal("Unable to connect to websocket server")
 	}
 	log.Println("Connected to websocket!")
 
@@ -188,4 +189,5 @@ func main() {
 		log.Printf("Recv'd: %s", wsEvent.Event)
 	}
 	WSConn.Close()
+	os.Exit(0)
 }

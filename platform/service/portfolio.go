@@ -1,16 +1,16 @@
-package main
+package service
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/url"
+	"os"
 
 	"github.com/thrasher-/gocryptotrader/common"
 	"github.com/thrasher-/gocryptotrader/config"
 	"github.com/thrasher-/gocryptotrader/currency"
 	"github.com/thrasher-/gocryptotrader/currency/symbol"
-	"github.com/thrasher-/gocryptotrader/exchanges/bitfinex"
+	btfx "github.com/thrasher-/gocryptotrader/exchanges/bitfinex"
 	"github.com/thrasher-/gocryptotrader/portfolio"
 )
 
@@ -55,14 +55,8 @@ func getOnlineOfflinePortfolio(coins []portfolio.Coin, online bool) {
 	}
 }
 
-func main() {
-	var inFile, key string
-	flag.StringVar(&inFile, "infile", config.GetFilePath(""), "The config input file to process.")
-	flag.StringVar(&key, "key", "", "The key to use for AES encryption.")
-	flag.Parse()
-
-	log.Println("GoCryptoTrader: portfolio tool.")
-
+// StartPortfolio prints out current portfolio values
+func StartPortfolio(inFile, key string) {
 	var cfg config.Config
 	var err = cfg.LoadConfig(inFile)
 	if err != nil {
@@ -121,7 +115,7 @@ func main() {
 				pf.Subtotal = y.Balance
 			}
 		} else {
-			bf := bitfinex.Bitfinex{}
+			bf := btfx.Bitfinex{}
 			ticker, errf := bf.GetTicker(y.Coin+"USD", url.Values{})
 			if errf != nil {
 				log.Println(errf)
@@ -173,4 +167,5 @@ func main() {
 		}
 		printSummary("\t Exchange balance", totals)
 	}
+	os.Exit(0)
 }

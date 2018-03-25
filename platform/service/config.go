@@ -1,34 +1,17 @@
-package main
+package service
 
 import (
-	"flag"
 	"log"
+	"os"
 
 	"github.com/thrasher-/gocryptotrader/common"
 	"github.com/thrasher-/gocryptotrader/config"
 )
 
-// EncryptOrDecrypt returns a string from a boolean
-func EncryptOrDecrypt(encrypt bool) string {
-	if encrypt {
-		return "encrypted"
-	}
-	return "decrypted"
-}
-
-func main() {
-	var inFile, outFile, key string
-	var encrypt bool
-	var err error
-	configFile := config.GetFilePath("")
-	flag.StringVar(&inFile, "infile", configFile, "The config input file to process.")
-	flag.StringVar(&outFile, "outfile", configFile+".out", "The config output file.")
-	flag.BoolVar(&encrypt, "encrypt", true, "Whether to encrypt or decrypt.")
-	flag.StringVar(&key, "key", "", "The key to use for AES encryption.")
-	flag.Parse()
-
-	log.Println("GoCryptoTrader: config-helper tool.")
-
+// StartConfig reads from inFile, decrypts file if encrypted and writes to
+// a specified location (outFile)
+// encrypt - denotes outFile encryption status
+func StartConfig(inFile, outFile, key string, encrypt bool) {
 	if key == "" {
 		result, errf := config.PromptForConfigKey()
 		if errf != nil {
@@ -76,6 +59,14 @@ func main() {
 	}
 	log.Printf(
 		"Successfully %s input file %s and wrote output to %s.\n",
-		EncryptOrDecrypt(encrypt), inFile, outFile,
+		encryptOrDecrypt(encrypt), inFile, outFile,
 	)
+	os.Exit(0)
+}
+
+func encryptOrDecrypt(encrypt bool) string {
+	if encrypt {
+		return "encrypted"
+	}
+	return "decrypted"
 }

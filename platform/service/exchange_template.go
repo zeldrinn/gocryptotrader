@@ -1,27 +1,28 @@
-package main
+package service
 
 import (
-	"flag"
 	"fmt"
 	"html/template"
 	"log"
 	"os"
-	"os/exec"
 
 	"github.com/thrasher-/gocryptotrader/common"
 	"github.com/thrasher-/gocryptotrader/config"
 )
 
 const (
+	mainPath = "%s%ssrc%sgithub.com%sthrasher-%sgocryptotrader%s"
+
 	packageTests   = "%s_test.go"
 	packageTypes   = "%s_types.go"
 	packageWrapper = "%s_wrapper.go"
 	packageMain    = "%s.go"
 	packageReadme  = "README.md"
 
-	exchangePackageLocation = "..%s..%sexchanges%s"
-	exchangeLocation        = "..%s..%sexchange.go"
-	exchangeConfigPath      = "..%s..%stestdata%sconfigtest.json"
+	exchangeServiceFile = "%splatform%sservice%sexchange_template_files%s"
+
+	exchangePackageLocation = "%sexchanges%s"
+	exchangeConfigPath      = "%stestdata%sconfigtest.json"
 )
 
 var (
@@ -32,6 +33,8 @@ var (
 	exchangeMain      string
 	exchangeReadme    string
 	exchangeJSON      string
+
+	templateFilePath string
 )
 
 type exchange struct {
@@ -43,25 +46,15 @@ type exchange struct {
 	FIX         bool
 }
 
-func main() {
-	var newExchangeName string
-	var websocketSupport, restSupport, fixSupport bool
-
-	flag.StringVar(&newExchangeName, "name", "", "-name [string] adds a new exchange")
-	flag.BoolVar(&websocketSupport, "ws", false, "-websocket adds websocket support")
-	flag.BoolVar(&restSupport, "rest", false, "-rest adds REST support")
-	flag.BoolVar(&fixSupport, "fix", false, "-fix adds FIX support?")
-
-	flag.Parse()
-
-	fmt.Println("GoCryptoTrader: Exchange templating tool.")
+// StartExchangeTemplate creates a new exchange template
+func StartExchangeTemplate(newExchangeName, goPath string, websocketSupport, restSupport, fixSupport bool) {
 
 	if newExchangeName == "" || newExchangeName == " " {
-		log.Fatal(`GoCryptoTrader: Exchange templating tool exchange name not set e.g. "exchange_template -name [newExchangeNameString]"`)
+		log.Fatal(`GoCryptoTrader: Exchange templating tool exchange name not set e.g. "-createexchange <exchange name>"`)
 	}
 
 	if !websocketSupport && !restSupport && !fixSupport {
-		log.Fatal(`GoCryptoTrader: Exchange templating tool support not set e.g. "exchange_template -name [newExchangeNameString] [-fix -ws -rest]"`)
+		log.Fatal(`GoCryptoTrader: Exchange templating tool support not set e.g. "-createexchange <exchange name> [-rs | -ws | -fs]"`)
 	}
 
 	fmt.Println("Exchange Name: ", newExchangeName)
@@ -94,8 +87,16 @@ func main() {
 		FIX:         fixSupport,
 	}
 
-	osPathSlash := common.GetOSPathSlash()
-	exchangeJSON := fmt.Sprintf(exchangeConfigPath, osPathSlash, osPathSlash, osPathSlash)
+	pathSeparator := common.GetOSPathSlash()
+	mainAbsolutePath := fmt.Sprintf(mainPath,
+		goPath,
+		pathSeparator,
+		pathSeparator,
+		pathSeparator,
+		pathSeparator,
+		pathSeparator)
+
+	exchangeJSON := fmt.Sprintf(exchangeConfigPath, mainAbsolutePath, pathSeparator)
 
 	configTestFile := config.GetConfig()
 	err = configTestFile.LoadConfig(exchangeJSON)
@@ -132,10 +133,9 @@ func main() {
 
 	exchangeDirectory = fmt.Sprintf(
 		exchangePackageLocation+newExchangeName+"%s",
-		osPathSlash,
-		osPathSlash,
-		osPathSlash,
-		osPathSlash)
+		mainAbsolutePath,
+		pathSeparator,
+		pathSeparator)
 
 	exchangeTest = fmt.Sprintf(exchangeDirectory+packageTests, newExchangeName)
 	exchangeTypes = fmt.Sprintf(exchangeDirectory+packageTypes, newExchangeName)
@@ -143,12 +143,18 @@ func main() {
 	exchangeMain = fmt.Sprintf(exchangeDirectory+packageMain, newExchangeName)
 	exchangeReadme = exchangeDirectory + packageReadme
 
+	templateFilePath := fmt.Sprintf(exchangeServiceFile,
+		absolutePath,
+		pathSeparator,
+		pathSeparator,
+		pathSeparator)
+
 	err = os.Mkdir(exchangeDirectory, 0700)
 	if err != nil {
 		log.Fatal("GoCryptoTrader: Exchange templating tool cannot make directory ", err)
 	}
 
-	tReadme, err := template.New("readme").ParseFiles("readme_file.tmpl")
+	tReadme, err := template.New("readme").ParseFiles(templateFilePath + "readme_file.tmpl")
 	if err != nil {
 		log.Fatal("GoCryptoTrader: Exchange templating tool error ", err)
 	}
@@ -159,7 +165,7 @@ func main() {
 	}
 	tReadme.Execute(r1, exch)
 
-	tMain, err := template.New("main").ParseFiles("main_file.tmpl")
+	tMain, err := template.New("main").ParseFiles(templateFilePath + "main_file.tmpl")
 	if err != nil {
 		log.Fatal("GoCryptoTrader: Exchange templating tool error ", err)
 	}
@@ -170,7 +176,7 @@ func main() {
 	}
 	tMain.Execute(m1, exch)
 
-	tTest, err := template.New("test").ParseFiles("test_file.tmpl")
+	tTest, err := template.New("test").ParseFiles(templateFilePath + "test_file.tmpl")
 	if err != nil {
 		log.Fatal("GoCryptoTrader: Exchange templating tool error ", err)
 	}
@@ -181,7 +187,7 @@ func main() {
 	}
 	tTest.Execute(t1, exch)
 
-	tType, err := template.New("type").ParseFiles("type_file.tmpl")
+	tType, err := template.New("type").ParseFiles(templateFilePath + "type_file.tmpl")
 	if err != nil {
 		log.Fatal("GoCryptoTrader: Exchange templating tool error ", err)
 	}
@@ -192,7 +198,7 @@ func main() {
 	}
 	tType.Execute(ty1, exch)
 
-	tWrapper, err := template.New("wrapper").ParseFiles("wrapper_file.tmpl")
+	tWrapper, err := template.New("wrapper").ParseFiles(templateFilePath + "wrapper_file.tmpl")
 	if err != nil {
 		log.Fatal("GoCryptoTrader: Exchange templating tool error ", err)
 	}
@@ -203,16 +209,6 @@ func main() {
 	}
 	tWrapper.Execute(w1, exch)
 
-	err = exec.Command("go", "fmt", exchangeDirectory).Run()
-	if err != nil {
-		log.Fatal("GoCryptoTrader: Exchange templating tool go fmt error ", err)
-	}
-
-	err = exec.Command("go", "test", exchangeDirectory).Run()
-	if err != nil {
-		log.Fatal("GoCryptoTrader: Exchange templating tool testing failed ", err)
-	}
-
 	fmt.Println("GoCryptoTrader: Exchange templating tool service complete")
 	fmt.Println("When wrapper is finished add exchange to exchange.go")
 	fmt.Println("Test exchange.go")
@@ -220,6 +216,7 @@ func main() {
 	fmt.Println("Test config.go")
 	fmt.Println("Open a pull request")
 	fmt.Println("If help is needed please post a message on the slack.")
+	os.Exit(0)
 }
 
 func newFile(path string) {
