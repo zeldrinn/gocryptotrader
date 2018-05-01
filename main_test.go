@@ -6,7 +6,7 @@ func TestSetupBotExchanges(t *testing.T) {
 	// setupBotExchanges()
 }
 
-func TestMain(t *testing.T) {
+func TestMainold(t *testing.T) {
 	// Nothing
 }
 

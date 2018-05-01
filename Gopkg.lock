@@ -50,6 +50,12 @@
   version = "v1.1"
 
 [[projects]]
+  name = "github.com/urfave/cli"
+  packages = ["."]
+  revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
+  version = "v1.20.0"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["websocket"]
@@ -58,6 +64,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "044625dbd4ca2222e3d52af7e25d4636b9c7e7c3e5211694b549e8ed42c2b6d7"
+  inputs-digest = "c7aecebebc47dcb2c291fda0da94803de99f39dad1892b4a0cfbc6b7f2947e1f"
   solver-name = "gps-cdcl"
   solver-version = 1
