@@ -1,10 +1,10 @@
 package command
 
 import (
-	"github.com/urfave/cli"
+	"fmt"
 	"github.com/thrasher-/gocryptotrader/config"
 	"github.com/thrasher-/gocryptotrader/exchanges/gdax"
-	"fmt"
+	"github.com/urfave/cli"
 )
 
 // App returns the command line interface to gocryptotrader
@@ -24,8 +24,8 @@ func App() *cli.App {
 	}
 	app.Commands = []cli.Command{
 		{
-			Name:  "sim",
-			Usage: "Run simulation",
+			Name:   "sim",
+			Usage:  "Run simulation",
 			Action: startSim,
 		},
 	}
